@@ -54,7 +54,7 @@ function fillAnalysisData(){
   if(rawData){
     var users = Object.keys(rawData);
     for(var i = 0; i < users.length; i++) {
-      analysis_report += "<h4>" + i+1 + ". " + users[i] + "</h4><p>Traits: Negative person, Needy</p>";
+      analysis_report += "<h4>" + i+1 + ". " + users[i] + "</h4><p>Answers Given:</p><ul><li>Terrible --> Negative person</li><li>Tell a personal story --> Needy</li></ul>";
     }
     analysis_report += "</p>";
   }
