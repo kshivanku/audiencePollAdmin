@@ -1,0 +1,25 @@
+#nav {
+  padding: 10 0 10 0;
+}
+
+#nav p {
+  display: inline-block;
+  line-height: 32px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+#nav p:hover{
+  background-color: #f8f8f8;
+}
+
+.question {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid black;
+  cursor: pointer;
+}
+
+.question:hover {
+  background-color: #f8f8f8;
+}

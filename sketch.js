@@ -1,7 +1,121 @@
 var socket;
 socket = io.connect("https://audiencepoll.herokuapp.com/");
 
+var rawData;
+
 $(document).ready(function(){
-  var data = {'x' : 123, 'y': 345};   //some sample data
-  socket.emit('sampleData', data);
+  loadPage('questions');
+  $("#atab").click(function(){
+    loadPage('analysis');
+  })
+  $("#qtab").click(function(){
+    loadPage('questions');
+  })
+  $("#question_list .question").click(function(){
+    clicked_id = $(this)[0].id;
+    clicked_quest_data = findQuestById(clicked_id);
+    console.log(clicked_quest_data);
+    socket.emit('questionData', clicked_quest_data);
+  })
+  // var data = {'x' : 123, 'y': 345};   //some sample data
+  // socket.emit('sampleData', data);
 })
+
+function loadPage(page) {
+  if(page == 'questions'){
+    $("#question_list").css("display", "block");
+    fillQuestionsData();
+    $("#analysis").css("display", "none");
+    $("#qtab").css("font-weight", "bold");
+    $("#atab").css("font-weight", "normal");
+  }
+  else if (page == 'analysis') {
+    $("#question_list").css("display", "none");
+    $("#analysis").css("display", "block");
+    fillAnalysisData();
+    $("#qtab").css("font-weight", "normal");
+    $("#atab").css("font-weight", "bold");
+  }
+}
+
+function fillQuestionsData(){
+  $("#question_list").empty();
+  for(var i = 0; i < questions.length; i++) {
+    var new_quest = `
+      <div class='question' id = `+ questions[i].question_id +`>
+        <h3>` + questions[i].question_text + `</h3>
+        <p>`+ questions[i].option1 +`, `+ questions[i].option2 +`, `+questions[i].option3 +`, `+ questions[i].option4 +`</p>
+      </div>`;
+    $("#question_list").append(new_quest);
+  }
+}
+
+function fillAnalysisData(){
+  $("#analysis").empty();
+  var analysis_report = "<h3>Data for following users is available:</h3><p>";
+  if(rawData){
+    var users = Object.keys(rawData);
+    for(var i = 0; i < users.length; i++) {
+      analysis_report += users[i] + "</p><p>";
+    }
+    analysis_report += "</p>";
+  }
+  else {
+    analysis_report += "<em>No users yet</em></p>"
+  }
+  $("#analysis").append(analysis_report);
+}
+
+function findQuestById(clicked_id){
+  for(var i = 0 ; i < questions.length; i++){
+    if(questions[i].question_id == clicked_id) {
+      questions[i].isasked = true;
+      return questions[i];
+    }
+  }
+}
+
+//Firebase Stuff
+var config = {
+  apiKey: "AIzaSyDB7c6Uf8dcA5m8jrWEyjKSPK7crGENyyQ",
+  authDomain: "audiencepoll-7e23c.firebaseapp.com",
+  databaseURL: "https://audiencepoll-7e23c.firebaseio.com",
+  projectId: "audiencepoll-7e23c",
+  storageBucket: "audiencepoll-7e23c.appspot.com",
+  messagingSenderId: "580263770976",
+};
+firebase.initializeApp(config);
+var database = firebase.database();
+
+var ref = database.ref("allusers");
+ref.on('value', gotData, errData);
+
+function gotData(data){
+  rawData = data.val();
+}
+
+function errData(err){
+  console.log(err);
+}
+
+
+var questions = [
+  {
+    "question_id": "HER01",
+    "question_text": "What is the color?",
+    "option1": "red",
+    "option2": "blue",
+    "option3": "white",
+    "option4": "green",
+    "isasked": false
+  },
+  {
+    "question_id": "HIM01",
+    "question_text": "How many stars?",
+    "option1": "1",
+    "option2": "10",
+    "option3": "23",
+    "option4": "543",
+    "isasked": false
+  }
+]
