@@ -50,11 +50,11 @@ function fillQuestionsData(){
 
 function fillAnalysisData(){
   $("#analysis").empty();
-  var analysis_report = "<h3>Data for following users is available:</h3><p>";
+  var analysis_report = "<h3>Data for following users is available:</h3>";
   if(rawData){
     var users = Object.keys(rawData);
     for(var i = 0; i < users.length; i++) {
-      analysis_report += users[i] + "</p><p>";
+      analysis_report += "<h4>" + i+1 + ". " + users[i] + "</h4><p>Traits: Negative person, Needy</p>";
     }
     analysis_report += "</p>";
   }
