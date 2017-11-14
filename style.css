@@ -1,3 +1,11 @@
+body {
+  font-family: sans-serif;
+  color: #212121;
+  max-width: 960px;
+  margin: auto;
+  padding: 10px 32px;
+}
+
 #nav {
   padding: 10 0 10 0;
 }

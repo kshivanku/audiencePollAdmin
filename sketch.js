@@ -17,8 +17,6 @@ $(document).ready(function(){
     console.log(clicked_quest_data);
     socket.emit('questionData', clicked_quest_data);
   })
-  // var data = {'x' : 123, 'y': 345};   //some sample data
-  // socket.emit('sampleData', data);
 })
 
 function loadPage(page) {
@@ -101,21 +99,30 @@ function errData(err){
 
 var questions = [
   {
-    "question_id": "HER01",
-    "question_text": "What is the color?",
-    "option1": "red",
-    "option2": "blue",
-    "option3": "white",
-    "option4": "green",
+    "question_id": "Both01",
+    "question_text": "How is the date going so far?",
+    "option1": "Perfect",
+    "option2": "Ok",
+    "option3": "Bad",
+    "option4": "Terrible",
     "isasked": false
   },
   {
     "question_id": "HIM01",
-    "question_text": "How many stars?",
-    "option1": "1",
-    "option2": "10",
-    "option3": "23",
-    "option4": "543",
+    "question_text": "Quick, save the conversation! What should he talk about next?",
+    "option1": "Tell a personal story",
+    "option2": "Talk about movies",
+    "option3": "Ask her something personal",
+    "option4": "Give her a complement",
+    "isasked": false
+  },
+  {
+    "question_id": "HER01",
+    "question_text": "What do you think is the most important quality that he is looking for in his partner?",
+    "option1": "Intelligence",
+    "option2": "Kindness",
+    "option3": "Fun",
+    "option4": "Looks",
     "isasked": false
   }
 ]
