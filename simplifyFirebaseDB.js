@@ -11,13 +11,18 @@ var config = {
 firebase.initializeApp(config);
 var database = firebase.database();
 
-var ref = database.ref("allusers");
-ref.on('value', gotData, errData);
+if(database.ref("allusers")){
+  var ref = database.ref("allusers");
+  ref.on('value', gotData, errData);
+}
 
 function gotData(data) {
-    var rawData = data.val();
-    simplifyFirebaseDB(rawData);
-    fillAudienceData();
+    if(data.val() != null) {
+      var rawData = data.val();
+      simplifyFirebaseDB(rawData);
+      fillAudienceData();
+      fillDatesData();
+    }
 }
 
 function errData(err) {

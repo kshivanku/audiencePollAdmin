@@ -4,13 +4,13 @@ socketAudience = io.connect("https://audiencepoll.herokuapp.com/");
 
 //This is sockets connection to the dates
 var socketDates;
+socketDates = io.connect("https://dateinterface.herokuapp.com/");
 
 $(document).ready(function() {
     fillAudienceData();
     fillDatesData();
 
     $(".question").live('click', function() {
-        console.log("clicked on question");
         $(this).addClass('sent');
         var clicked_id = $(this)[0].id;
         clicked_id = clicked_id.split("_")[1]; //removing the question or reaction part from id
@@ -24,6 +24,24 @@ $(document).ready(function() {
         var audienceReaction = "" + $(this)[0].childNodes[1].innerHTML +"";
         console.log("audienceReaction", audienceReaction);
         socketAudience.emit('audienceReaction', audienceReaction);
+    })
+
+    $(".dateMessage").live('click', function(){
+      $(this).addClass('sent');
+      var clicked_id = $(this)[0].id;
+      var newDateMessage = {};
+      if(clicked_id.indexOf("HIM") != -1) {
+        newDateMessage.intendedFor = ["writer"];
+      }
+      else if(clicked_id.indexOf("HER") != -1) {
+        newDateMessage.intendedFor = ["date"];
+      }
+      else if(clicked_id.indexOf("BOTH") != -1) {
+        newDateMessage.intendedFor = ["writer", "date"];
+      }
+      newDateMessage.message = "" + $(this)[0].childNodes[1].innerText +"";
+      console.log(newDateMessage);
+      socketDates.emit('scriptCues', newDateMessage);
     })
 })
 
@@ -81,7 +99,6 @@ function calcAudienceReaction(question_text) {
                 }
             }
         }
-        console.log("answerPolls for question: " + question_text + ": ", answerPolls);
         var allAnswers = Object.keys(answerPolls);
         if (allAnswers.length > 0) {
             var maxAnswer = allAnswers[0];
@@ -100,7 +117,16 @@ function calcAudienceReaction(question_text) {
     }
 }
 
-function fillDatesData() {}
+function fillDatesData() {
+  $("#messagesForDates").empty();
+  for (var i = 0 ; i < questions.length ; i++) {
+    var new_message = `
+        <div class='messageDiv dateMessage' id = message_` + questions[i].question_id + `>
+        <p> Topic: <span style="font-weight: bold">` + calcAudienceReaction(questions[i].question_text);`</p></span>
+        </div>`;
+    $("#messagesForDates").append(new_message);
+  }
+}
 
 function findQuestById(clicked_id) {
     for (var i = 0; i < questions.length; i++) {
