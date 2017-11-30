@@ -1,128 +1,112 @@
-var socket;
-socket = io.connect("https://audiencepoll.herokuapp.com/");
+//This is socet connection to audience
+var socketAudience;
+socketAudience = io.connect("https://audiencepoll.herokuapp.com/");
 
-var rawData;
+//This is sockets connection to the dates
+var socketDates;
 
-$(document).ready(function(){
-  loadPage('questions');
-  $("#atab").click(function(){
-    loadPage('analysis');
-  })
-  $("#qtab").click(function(){
-    loadPage('questions');
-  })
-  $("#question_list .question").click(function(){
-    clicked_id = $(this)[0].id;
-    clicked_quest_data = findQuestById(clicked_id);
-    console.log(clicked_quest_data);
-    socket.emit('questionData', clicked_quest_data);
-  })
+$(document).ready(function() {
+    fillAudienceData();
+    fillDatesData();
+
+    $(".question").live('click', function() {
+        console.log("clicked on question");
+        $(this).addClass('sent');
+        var clicked_id = $(this)[0].id;
+        clicked_id = clicked_id.split("_")[1]; //removing the question or reaction part from id
+        var clicked_quest_data = findQuestById(clicked_id);
+        console.log("clicked_quest_data", clicked_quest_data);
+        socketAudience.emit('questionData', clicked_quest_data);
+    })
+
+    $(".audienceReaction").live('click', function() {
+        $(this).addClass('sent');
+        var audienceReaction = "" + $(this)[0].childNodes[1].innerHTML +"";
+        console.log("audienceReaction", audienceReaction);
+        socketAudience.emit('audienceReaction', audienceReaction);
+    })
 })
 
-function loadPage(page) {
-  if(page == 'questions'){
-    $("#question_list").css("display", "block");
-    fillQuestionsData();
-    $("#analysis").css("display", "none");
-    $("#qtab").css("font-weight", "bold");
-    $("#atab").css("font-weight", "normal");
-  }
-  else if (page == 'analysis') {
-    $("#question_list").css("display", "none");
-    $("#analysis").css("display", "block");
-    fillAnalysisData();
-    $("#qtab").css("font-weight", "normal");
-    $("#atab").css("font-weight", "bold");
-  }
-}
+function fillAudienceData() {
+    console.log("inside fillAudienceData");
+    $("#messagesForAudience").empty();
+    for (var i = 0; i < questions.length; i++) {
+        if(questions[i].isSent) {
+          var new_quest = `
+              <div class='messageDiv question padder sent' id = question_` + questions[i].question_id + `>
+              <h3>` + questions[i].question_text + `</h3>
+              <p>` + questions[i].option1 + `, ` + questions[i].option2 + `, ` + questions[i].option3 + `, ` + questions[i].option4 + `</p>
+              </div>`;
+        }
+        else{
+          var new_quest = `
+              <div class='messageDiv question padder' id = question_` + questions[i].question_id + `>
+              <h3>` + questions[i].question_text + `</h3>
+              <p>` + questions[i].option1 + `, ` + questions[i].option2 + `, ` + questions[i].option3 + `, ` + questions[i].option4 + `</p>
+              </div>`;
+        }
+        $("#messagesForAudience").append(new_quest);
 
-function fillQuestionsData(){
-  $("#question_list").empty();
-  for(var i = 0; i < questions.length; i++) {
-    var new_quest = `
-      <div class='question' id = `+ questions[i].question_id +`>
-        <h3>` + questions[i].question_text + `</h3>
-        <p>`+ questions[i].option1 +`, `+ questions[i].option2 +`, `+questions[i].option3 +`, `+ questions[i].option4 +`</p>
-      </div>`;
-    $("#question_list").append(new_quest);
-  }
-}
-
-function fillAnalysisData(){
-  $("#analysis").empty();
-  var analysis_report = "<h3>Data for following users is available:</h3>";
-  if(rawData){
-    var users = Object.keys(rawData);
-    for(var i = 0; i < users.length; i++) {
-      analysis_report += "<h4>" + i+1 + ". " + users[i] + "</h4><p>Answers Given:</p><ul><li>Terrible --> Negative person</li><li>Tell a personal story --> Needy</li></ul>";
+        if(questions[i + 1] && questions[i + 1].isSent) {
+          var audienceReaction = `
+              <div class='messageDiv audienceReaction padder sent' id = reaction_` + questions[i].question_id + `>
+              <p> It looks like you all have chosen: <span style="font-weight: bold">` + calcAudienceReaction(questions[i].question_text);
+          `</span></div>`;
+        }
+        else {
+          var audienceReaction = `
+              <div class='messageDiv audienceReaction padder' id = reaction_` + questions[i].question_id + `>
+              <p> It looks like you all have chosen: <span style="font-weight: bold">` + calcAudienceReaction(questions[i].question_text);
+          `</span></div>`;
+        }
+        $("#messagesForAudience").append(audienceReaction);
     }
-    analysis_report += "</p>";
-  }
-  else {
-    analysis_report += "<em>No users yet</em></p>"
-  }
-  $("#analysis").append(analysis_report);
 }
 
-function findQuestById(clicked_id){
-  for(var i = 0 ; i < questions.length; i++){
-    if(questions[i].question_id == clicked_id) {
-      questions[i].isasked = true;
-      return questions[i];
+function calcAudienceReaction(question_text) {
+    var answerPolls = {};
+    var index = -1;
+    if (simplifiedDB.length > 0) {
+        for (var i = 0; i < simplifiedDB.length; i++) {
+            for (var k = 0; k < simplifiedDB[i].questions.length; k++) {
+                if (simplifiedDB[i].questions[k] == question_text) {
+                    index = k;
+                }
+            }
+            if (index != -1) {
+                if (answerPolls[simplifiedDB[i].answers[index]]) {
+                    answerPolls[simplifiedDB[i].answers[index]] += 1;
+                } else {
+                    answerPolls[simplifiedDB[i].answers[index]] = 1;
+                }
+            }
+        }
+        console.log("answerPolls for question: " + question_text + ": ", answerPolls);
+        var allAnswers = Object.keys(answerPolls);
+        if (allAnswers.length > 0) {
+            var maxAnswer = allAnswers[0];
+            for (var j = 1; j < allAnswers.length; j++) {
+                if (answerPolls[allAnswers[j]] > answerPolls[maxAnswer]) {
+                    maxAnswer = allAnswers[j];
+                }
+            }
+            console.log("Max Answer for " + question_text + " is " + maxAnswer);
+            return maxAnswer;
+        } else {
+            return "null";
+        }
+    } else {
+        return "null";
     }
-  }
 }
 
-//Firebase Stuff
-var config = {
-  apiKey: "AIzaSyDB7c6Uf8dcA5m8jrWEyjKSPK7crGENyyQ",
-  authDomain: "audiencepoll-7e23c.firebaseapp.com",
-  databaseURL: "https://audiencepoll-7e23c.firebaseio.com",
-  projectId: "audiencepoll-7e23c",
-  storageBucket: "audiencepoll-7e23c.appspot.com",
-  messagingSenderId: "580263770976",
-};
-firebase.initializeApp(config);
-var database = firebase.database();
+function fillDatesData() {}
 
-var ref = database.ref("allusers");
-ref.on('value', gotData, errData);
-
-function gotData(data){
-  rawData = data.val();
+function findQuestById(clicked_id) {
+    for (var i = 0; i < questions.length; i++) {
+        if (questions[i].question_id == clicked_id) {
+            questions[i].isSent = true;
+            return questions[i];
+        }
+    }
 }
-
-function errData(err){
-  console.log(err);
-}
-
-
-var questions = [
-  {
-    "question_id": "Both01",
-    "question_text": "How is the date going so far?",
-    "option1": "Perfect",
-    "option2": "Ok",
-    "option3": "Bad",
-    "option4": "Terrible",
-    "isasked": false
-  },
-  {
-    "question_id": "HIM01",
-    "question_text": "Quick, save the conversation! What should he talk about next?",
-    "option1": "Tell a personal story",
-    "option2": "Talk about movies",
-    "option3": "Ask her something personal",
-    "option4": "Give her a complement",
-    "isasked": false
-  },
-  {
-    "question_id": "HER01",
-    "question_text": "What do you think is the most important quality that he is looking for in his partner?",
-    "option1": "Intelligence",
-    "option2": "Kindness",
-    "option3": "Fun",
-    "option4": "Looks",
-    "isasked": false
-  }
-]
